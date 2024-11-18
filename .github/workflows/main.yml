@@ -7,6 +7,9 @@ env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   DOCKERHUB_KEY: ${{ secrets.DOCKER_KEY }}
   IMAGE_NAME: node-app
+  ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+  ARGOCD_USERNAME: ${{ secrets.ARGOCD_USERNAME }}
+  ARGOCD_PASSWORD: ${{ secrets.ARGOCD_PASSWORD }}
 
 jobs:
   build-and-deploy:
@@ -37,3 +40,27 @@ jobs:
           git add values.yaml
           git commit -m "Update values.yaml"
           git push
+
+          - name: Set up ArgoCD CLI
+          run: |
+            curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.9.3/argocd-linux-amd64
+            chmod +x /usr/local/bin/argocd
+  
+      - name: Log in to ArgoCD
+        run: |
+          argocd login ${{ env.ARGOCD_SERVER }} --username ${{ env.ARGOCD_USERNAME }} --password ${{ env.ARGOCD_PASSWORD }} --insecure
+  
+      - name: Create ArgoCD Application
+        run: |
+          argocd app create nodeapp \
+            --repo https://github.com/sgvdevops/node-app.git \
+            --path nodeapp/ \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace default \
+            --sync-policy automated \
+            --auto-prune \
+            --self-heal
+  
+      - name: Wait for ArgoCD Application Sync
+        run: |
+          argocd app wait my-application --health --timeout 600
