@@ -14,7 +14,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 env:
-  APP_VERSION: 03a6d64c0456c95cd7dd39691e7b2603e1e67020
+  APP_VERSION: 1f199083ff9a50e53503a54ae6e071983e43c533
 
 serviceAccount:
   # Specifies whether a service account should be created
