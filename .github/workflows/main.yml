@@ -41,10 +41,10 @@ jobs:
           git commit -m "Update values.yaml"
           git push
 
-          - name: Set up ArgoCD CLI
-          run: |
-            curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.9.3/argocd-linux-amd64
-            chmod +x /usr/local/bin/argocd
+      - name: Set up ArgoCD CLI
+        run: |
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.9.3/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
   
       - name: Log in to ArgoCD
         run: |
