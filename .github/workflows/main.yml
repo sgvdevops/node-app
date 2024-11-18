@@ -63,4 +63,4 @@ jobs:
   
       - name: Wait for ArgoCD Application Sync
         run: |
-          argocd app wait my-application --health --timeout 600
+          argocd app wait nodeapp --health --timeout 600
