@@ -47,7 +47,16 @@ jobs:
           git add values.yaml
           git commit -m "Update values.yaml"
           git push
-    
+      
+      - name: Set up AWS CLI
+        run: |
+          # Install dependencies
+          sudo apt-get update
+          sudo apt-get install -y unzip curl
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+      
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -105,4 +114,4 @@ jobs:
         run: |
           argocd app wait my-application --health --timeout 600
 
-  
+         
