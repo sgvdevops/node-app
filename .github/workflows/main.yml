@@ -48,7 +48,7 @@ jobs:
           aws-region: us-east-2  
       
       - name: Set up kubectl
-        uses: eks-actions/eks-kubeconfig-action@v1
+        uses: azure/setup-kubectl@v4
         with:
-          cluster-name: staging-eks-devops  
-          region: us-east-2
+          version: '1.29' 
+        id: install
