@@ -12,7 +12,7 @@ env:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -48,54 +48,61 @@ jobs:
           git commit -m "Update values.yaml"
           git push
     
-      # - name: Set up AWS CLI
-      #   uses: aws-actions/configure-aws-credentials@v2
-      #   with:
-      #     aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-east-2  
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2  
       
-      # - name: Set up kubectl
-      #   uses: azure/setup-kubectl@v4
-      #   with:
-      #     version: 'v1.24.0' 
-      # - name: Install ArgoCD
-      #   run: |
-      #     kubectl create namespace argocd
-      #     kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.24.0' 
+        id: install
+      
+      - name: Update kube config
+        run: aws eks update-kubeconfig --name <cluster name> --region us-east-2
+  
+      - name: Install ArgoCD
+        run: |
+          kubectl create namespace argocd
+          kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
             
-      # - name: Expose ArgoCD API server
-      #   run: |
-      #     kubectl port-forward svc/argocd-server -n argocd 5000:443 &
+      - name: Expose ArgoCD API server
+        run: |
+          kubectl port-forward svc/argocd-server -n argocd 5000:443 &
 
-      # - name: Set up ArgoCD CLI
-      #   run: |
-      #     curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.9.3/argocd-linux-amd64
-      #     chmod +x /usr/local/bin/argocd
+      - name: Set up ArgoCD CLI
+        run: |
+          curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/download/v2.9.3/argocd-linux-amd64
+          chmod +x /usr/local/bin/argocd
   
-      # - name: Login to ArgoCD
-      #   env:
-      #     ARGOCD_SERVER: argocd-server.argocd.svc.cluster.local  # Default service URL inside the cluster
-      #     ARGOCD_USERNAME: admin  # Default username is 'admin'
-      #     ARGOCD_PASSWORD: $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode)  # Fetch the password
-      #   run: |
-      #     echo "Logging in to ArgoCD..."
-      #     argocd login $ARGOCD_SERVER --username $ARGOCD_USERNAME --password $ARGOCD_PASSWORD --insecure
+      - name: Login to ArgoCD
+        env:
+          ARGOCD_SERVER: argocd-server.argocd.svc.cluster.local  # Default service URL inside the cluster
+          ARGOCD_USERNAME: admin  # Default username is 'admin'
+          ARGOCD_PASSWORD: $(kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode)  # Fetch the password
+        run: |
+          echo "Logging in to ArgoCD..."
+          argocd login $ARGOCD_SERVER --username $ARGOCD_USERNAME --password $ARGOCD_PASSWORD --insecure
         
-      # - name: Verify login
-      #   run: argocd account list 
+      - name: Verify login
+        run: argocd account list 
   
-      # - name: Create ArgoCD Application
-      #   run: |
-      #     argocd app create nodeapp \
-      #       --repo https://github.com/sgvdevops/node-app.git \
-      #       --path nodeapp/ \
-      #       --dest-server https://kubernetes.default.svc \
-      #       --dest-namespace default \
-      #       --sync-policy automated \
-      #       --auto-prune \
-      #       --self-heal
+      - name: Create ArgoCD Application
+        run: |
+          argocd app create nodeapp \
+            --repo https://github.com/sgvdevops/node-app.git \
+            --path nodeapp/ \
+            --dest-server https://kubernetes.default.svc \
+            --dest-namespace default \
+            --sync-policy automated \
+            --auto-prune \
+            --self-heal
   
-      # - name: Wait for ArgoCD Application Sync
-      #   run: |
-      #     argocd app wait my-application --health --timeout 600
+      - name: Wait for ArgoCD Application Sync
+        run: |
+          argocd app wait my-application --health --timeout 600
+
+         
