@@ -62,7 +62,7 @@ jobs:
         id: install
       
       - name: Update kube config
-        run: aws eks update-kubeconfig --name <cluster name> --region us-east-2
+        run: aws eks update-kubeconfig --name staging-eks-devops --region us-east-2
   
       - name: Install ArgoCD
         run: |
